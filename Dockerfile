@@ -19,8 +19,8 @@ COPY . .
 # Compilar TypeScript a JavaScript
 RUN pnpm exec tsc
 
-# Exponer el puerto si es necesario (opcional, dependiendo de tu aplicación)
-# EXPOSE 3000
+# Verificar que los archivos se compilaron correctamente
+RUN ls -la dist/
 
 # Comando para ejecutar la aplicación
 CMD ["node", "dist/index.js"]

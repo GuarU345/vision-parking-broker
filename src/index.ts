@@ -3,6 +3,7 @@ import { PUBLISH_TOPIC } from "./constants";
 import { handleChangeStatus } from "./message/sensor.change_status";
 import { handleReservation } from "./message/sensor.reservation";
 import { handleRfidDetection } from "./message/sensor.rfid_detection";
+import { handleError } from "./message/error";
 
 const client = mqtt.connect(process.env.MQTT_BROKER_URL ?? "http://localhost", { port: 1883 });
 
@@ -31,25 +32,36 @@ client.on('connect', () => {
 });
 
 client.on('message', (topic, message) => {
+
+    let parsedMessage: unknown = null;
+
+    try {
+        console.log(`Mensaje recibido en el tópico ${topic}:`, message.toString());
+        parsedMessage = JSON.parse(message.toString());
+    } catch (error) {
+        console.error("Error al procesar el mensaje:", error);
+        return handleError(topic, message)
+    }
+    
     if (topic === PUBLISH_TOPIC["SENSOR:CHANGE_STATUS"]) {
-        return handleChangeStatus(message).then(() => {
+        return handleChangeStatus(parsedMessage).then(() => {
             console.log(`Mensaje procesado para el tópico ${PUBLISH_TOPIC["SENSOR:CHANGE_STATUS"]}`);
         }).catch((err) => {
-            console.error(`Error al procesar el mensaje del tópico ${PUBLISH_TOPIC["SENSOR:CHANGE_STATUS"]}:`, err);
+            handleError(topic, parsedMessage)
         });
     }
     if (topic === PUBLISH_TOPIC["SENSOR:RESERVATION"]) {
-        return handleReservation(message).then(() => {
+        return handleReservation(parsedMessage).then(() => {
             console.log(`Mensaje procesado para el tópico ${PUBLISH_TOPIC["SENSOR:RESERVATION"]}`);
         }).catch((err) => {
-            console.error(`Error al procesar el mensaje del tópico ${PUBLISH_TOPIC["SENSOR:RESERVATION"]}:`, err);
+            handleError(topic, parsedMessage)
         });
     }
     if (topic === PUBLISH_TOPIC["SENSOR:RFID_DETECTION"]) {
-        return handleRfidDetection(message).then(() => {
+        return handleRfidDetection(parsedMessage).then(() => {
             console.log(`Mensaje procesado para el tópico ${PUBLISH_TOPIC["SENSOR:RFID_DETECTION"]}`);
         }).catch((err) => {
-            console.error(`Error al procesar el mensaje del tópico ${PUBLISH_TOPIC["SENSOR:RFID_DETECTION"]}:`, err);
+            handleError(topic, parsedMessage)
         });
     }
 });
