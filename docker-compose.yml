@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  mosquitto:
+    image: docker.io/eclipse-mosquitto:latest
+    container_name: mosquitto
+    ports:
+      - "1883:1883"
+      - "9001:9001"  # Puerto adicional para WebSocket (opcional)
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    restart: unless-stopped
+    networks:
+      - parking-network
+
+  vision-parking-broker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vision-parking-broker
+    environment:
+      - MQTT_BROKER_URL=mqtt://mosquitto
+    depends_on:
+      - mosquitto
+    restart: unless-stopped
+    networks:
+      - parking-network
+
+networks:
+  parking-network:
+    driver: bridge
+
+volumes:
+  mosquitto_data:
+  mosquitto_log:
