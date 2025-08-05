@@ -1,13 +1,14 @@
 import mqtt from "mqtt"
-import { PUBLISH_TOPIC } from "./constants";
+import { PUBLISH_TOPIC, SUBSCRIBE_TOPIC } from "./constants";
 import { handleChangeStatus } from "./message/sensor.change_status";
-import { handleReservation } from "./message/sensor.reservation";
-import { handleRfidDetection } from "./message/sensor.rfid_detection";
+import { handleApiReservationCreated } from "./message/api.reservation_created";
+import { handleApiReservationStatusChanged } from "./message/api.reservation_status_changed";
 import { handleError } from "./message/error";
 
 const client = mqtt.connect(process.env.MQTT_BROKER_URL ?? "http://localhost", { port: 1883 });
 
 client.on('connect', () => {
+    // Suscripciones a tópicos de sensores
     client.subscribe(PUBLISH_TOPIC["SENSOR:CHANGE_STATUS"], (err) => {
         if (err) {
             console.error(`Error al suscribirse al tópico ${PUBLISH_TOPIC["SENSOR:CHANGE_STATUS"]}:`, err);
@@ -27,6 +28,23 @@ client.on('connect', () => {
             console.error(`Error al suscribirse al tópico ${PUBLISH_TOPIC["SENSOR:RFID_DETECTION"]}:`, err);
         } else {
             console.log(`Suscrito al tópico ${PUBLISH_TOPIC["SENSOR:RFID_DETECTION"]}`);
+        }
+    });
+
+    // Suscripciones a tópicos del API
+    client.subscribe(SUBSCRIBE_TOPIC["API:RESERVATION_CREATED"], (err) => {
+        if (err) {
+            console.error(`Error al suscribirse al tópico ${SUBSCRIBE_TOPIC["API:RESERVATION_CREATED"]}:`, err);
+        } else {
+            console.log(`Suscrito al tópico ${SUBSCRIBE_TOPIC["API:RESERVATION_CREATED"]}`);
+        }
+    });
+
+    client.subscribe(SUBSCRIBE_TOPIC["API:RESERVATION_STATUS_CHANGED"], (err) => {
+        if (err) {
+            console.error(`Error al suscribirse al tópico ${SUBSCRIBE_TOPIC["API:RESERVATION_STATUS_CHANGED"]}:`, err);
+        } else {
+            console.log(`Suscrito al tópico ${SUBSCRIBE_TOPIC["API:RESERVATION_STATUS_CHANGED"]}`);
         }
     });
 });
@@ -50,17 +68,19 @@ client.on('message', (topic, message) => {
             handleError(topic, parsedMessage)
         });
     }
-    if (topic === PUBLISH_TOPIC["SENSOR:RESERVATION"]) {
-        return handleReservation(parsedMessage).then(() => {
-            console.log(`Mensaje procesado para el tópico ${PUBLISH_TOPIC["SENSOR:RESERVATION"]}`);
+    if (topic === SUBSCRIBE_TOPIC["API:RESERVATION_CREATED"]) {
+        return handleApiReservationCreated(parsedMessage, client).then(() => {
+            console.log(`Mensaje procesado para el tópico ${SUBSCRIBE_TOPIC["API:RESERVATION_CREATED"]}`);
         }).catch((err) => {
+            console.error(`Error al procesar reserva creada:`, err)
             handleError(topic, parsedMessage)
         });
     }
-    if (topic === PUBLISH_TOPIC["SENSOR:RFID_DETECTION"]) {
-        return handleRfidDetection(parsedMessage).then(() => {
-            console.log(`Mensaje procesado para el tópico ${PUBLISH_TOPIC["SENSOR:RFID_DETECTION"]}`);
+    if (topic === SUBSCRIBE_TOPIC["API:RESERVATION_STATUS_CHANGED"]) {
+        return handleApiReservationStatusChanged(parsedMessage, client).then(() => {
+            console.log(`Mensaje procesado para el tópico ${SUBSCRIBE_TOPIC["API:RESERVATION_STATUS_CHANGED"]}`);
         }).catch((err) => {
+            console.error(`Error al procesar cambio de estado:`, err)
             handleError(topic, parsedMessage)
         });
     }
