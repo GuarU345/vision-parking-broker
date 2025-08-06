@@ -5,12 +5,7 @@ interface ReservationCreatedMessage {
     rsv_id: string
     usr_id: string
     pks_id: string
-    rsv_initial_date: string
-    rsv_end_date: string
-    rsv_reason: string
     status: string
-    user_name: string
-    parking_spot_code: string
 }
 
 export async function handleApiReservationCreated(data: unknown, client: mqtt.MqttClient) {
@@ -30,11 +25,11 @@ export async function handleApiReservationCreated(data: unknown, client: mqtt.Mq
             type: "reservation_created",
             reservation_id: reservationData.rsv_id,
             parking_spot_id: reservationData.pks_id,
-            parking_spot_code: reservationData.parking_spot_code,
-            user_name: reservationData.user_name,
-            start_date: reservationData.rsv_initial_date,
-            end_date: reservationData.rsv_end_date,
-            reason: reservationData.rsv_reason,
+            // parking_spot_code: reservationData.parking_spot_code,
+            // user_name: reservationData.user_name,
+            // start_date: reservationData.rsv_initial_date,
+            // end_date: reservationData.rsv_end_date,
+            // reason: reservationData.rsv_reason,
             status: reservationData.status,
             timestamp: new Date().toISOString()
         }
