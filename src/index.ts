@@ -4,6 +4,9 @@ import { handleChangeStatus } from "./message/sensor.change_status";
 import { handleApiReservationCreated } from "./message/api.reservation_created";
 import { handleApiReservationStatusChanged } from "./message/api.reservation_status_changed";
 import { handleError } from "./message/error";
+import { config } from "dotenv";
+
+config();
 
 const client = mqtt.connect(process.env.MQTT_BROKER_URL ?? "http://localhost", { port: 1883 });
 
