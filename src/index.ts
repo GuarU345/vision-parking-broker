@@ -2,7 +2,6 @@ import mqtt from "mqtt"
 import { PUBLISH_TOPIC, SUBSCRIBE_TOPIC } from "./constants";
 import { handleChangeStatus } from "./message/sensor.change_status";
 import { handleApiReservationCreated } from "./message/api.reservation_created";
-import { handleApiReservationStatusChanged } from "./message/api.reservation_status_changed";
 import { handleError } from "./message/error";
 import { config } from "dotenv";
 
@@ -63,7 +62,7 @@ client.on('message', (topic, message) => {
         console.error("Error al procesar el mensaje:", error);
         return handleError(topic, message)
     }
-    
+
     if (topic === PUBLISH_TOPIC["SENSOR:CHANGE_STATUS"]) {
         return handleChangeStatus(parsedMessage).then(() => {
             console.log(`Mensaje procesado para el tópico ${PUBLISH_TOPIC["SENSOR:CHANGE_STATUS"]}`);
@@ -76,14 +75,6 @@ client.on('message', (topic, message) => {
             console.log(`Mensaje procesado para el tópico ${SUBSCRIBE_TOPIC["API:RESERVATION_CREATED"]}`);
         }).catch((err) => {
             console.error(`Error al procesar reserva creada:`, err)
-            handleError(topic, parsedMessage)
-        });
-    }
-    if (topic === SUBSCRIBE_TOPIC["API:RESERVATION_STATUS_CHANGED"]) {
-        return handleApiReservationStatusChanged(parsedMessage, client).then(() => {
-            console.log(`Mensaje procesado para el tópico ${SUBSCRIBE_TOPIC["API:RESERVATION_STATUS_CHANGED"]}`);
-        }).catch((err) => {
-            console.error(`Error al procesar cambio de estado:`, err)
             handleError(topic, parsedMessage)
         });
     }

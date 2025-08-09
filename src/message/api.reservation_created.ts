@@ -11,9 +11,9 @@ interface ReservationCreatedMessage {
 export async function handleApiReservationCreated(data: unknown, client: mqtt.MqttClient) {
     try {
         console.log("Manejando reserva creada desde API:", data);
-        
+
         const reservationData = data as ReservationCreatedMessage
-        
+
         // Validar que tenemos los datos necesarios
         if (!reservationData.rsv_id || !reservationData.pks_id) {
             console.error("Datos de reserva incompletos:", reservationData)
@@ -25,18 +25,13 @@ export async function handleApiReservationCreated(data: unknown, client: mqtt.Mq
             type: "reservation_created",
             reservation_id: reservationData.rsv_id,
             parking_spot_id: reservationData.pks_id,
-            // parking_spot_code: reservationData.parking_spot_code,
-            // user_name: reservationData.user_name,
-            // start_date: reservationData.rsv_initial_date,
-            // end_date: reservationData.rsv_end_date,
-            // reason: reservationData.rsv_reason,
             status: reservationData.status,
             timestamp: new Date().toISOString()
         }
 
         // Publicar al sensor específico del parking spot
         const sensorTopic = `${BROKER_TO_SENSOR_TOPIC["BROKER:RESERVATION_NOTIFICATION"]}/${reservationData.pks_id}`
-        
+
         client.publish(sensorTopic, JSON.stringify(sensorMessage), { qos: 1 }, (err) => {
             if (err) {
                 console.error(`Error al publicar al sensor ${sensorTopic}:`, err)
