@@ -4,22 +4,30 @@ export async function handleChangeStatus(data: any) {
     const parkingSpot = await getParkingSpotById(parkingSpotConfig.pks_id)
 
     const { status: currentStatus } = parkingSpot
+    let spotStatus;
 
-    if (currentStatus.stu_name === "Reservado" || currentStatus.stu_name === "Ocupado") {
-        const newStatus = await getStatusByTableAndName("parking_spots", "Disponible")
+    if (currentStatus.stu_name === "Reservado") {
+        spotStatus = await getStatusByTableAndName("parking_spots", "Disponible")
+        const statusReservation = await getStatusByTableAndName("reservations", "Finalizada")
+        const currentReservation = parkingSpot.reservations.find((resv: any) => resv.status.stu_name === "Realizada")
 
-        const data = {
-            stu_id: newStatus.stu_id,
+        const reservationData = {
+            stu_id: statusReservation.stu_id,
         }
-        await updateParkingSpotStatus(parkingSpot.pks_id, data)
-    } else {
-        const newStatus = await getStatusByTableAndName("parking_spots", "Ocupado")
 
-        const data = {
-            stu_id: newStatus.stu_id,
-        }
+        await updateReservationStatus(currentReservation.rsv_id, reservationData)
+    } else if (currentStatus.stu_name === "Ocupado") {
+        spotStatus = await getStatusByTableAndName("parking_spots", "Disponible")
         await updateParkingSpotStatus(parkingSpot.pks_id, data)
     }
+    else {
+        spotStatus = await getStatusByTableAndName("parking_spots", "Ocupado")
+    }
+
+    const spotData = {
+        stu_id: spotStatus.stu_id,
+    }
+    await updateParkingSpotStatus(parkingSpot.pks_id, spotData)
 }
 
 const getParkingSpotIdByEsp32Id = async (esp32Id: string) => {
@@ -64,6 +72,18 @@ const getStatusByTableAndName = async (table: string, statusName: string) => {
         },
     })
 
+    const data = await resp.json()
+    return data
+}
+
+const updateReservationStatus = async (reservationId: string, body: any) => {
+    const resp = await fetch(`${process.env.API_BACKEND_URL}/reservations/${reservationId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+    })
     const data = await resp.json()
     return data
 }
