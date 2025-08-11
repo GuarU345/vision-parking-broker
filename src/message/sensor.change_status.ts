@@ -3,8 +3,13 @@ export async function handleChangeStatus(data: any) {
 
     const parkingSpot = await getParkingSpotById(parkingSpotConfig.pks_id)
 
+    const assignedTag = await getUserByAssignedTag(data.tagIdentifier)
+
+    const spotAssignment = await getActiveSpotAssignment(parkingSpot.pks_id)
+
     const { status: currentStatus } = parkingSpot.data
     let spotStatus;
+    let isAssign = false
 
     if (currentStatus.stu_name === "Reservado") {
         spotStatus = await getStatusByTableAndName("parking_spots", "Disponible")
@@ -18,16 +23,22 @@ export async function handleChangeStatus(data: any) {
         await updateReservationStatus(currentReservation.rsv_id, reservationData)
     } else if (currentStatus.stu_name === "Ocupado") {
         spotStatus = await getStatusByTableAndName("parking_spots", "Disponible")
-        await updateParkingSpotStatus(parkingSpot.pks_id, data)
     }
     else {
         spotStatus = await getStatusByTableAndName("parking_spots", "Ocupado")
+
     }
 
     const spotData = {
         stu_id: spotStatus.stu_id,
     }
     await updateParkingSpotStatus(parkingSpot.pks_id, spotData)
+
+    if (isAssign) {
+        await assignSpotToUser(assignedTag.usr_id, parkingSpot.pks_id)
+    } else {
+        await unassignSpotFromUser(spotAssignment.spa_id)
+    }
 }
 
 const getParkingSpotIdByEsp32Id = async (esp32Id: string) => {
@@ -88,6 +99,60 @@ const updateReservationStatus = async (reservationId: string, body: any) => {
             'api-key-access': process.env.API_KEY_ACCESS || '',
         },
         body: JSON.stringify(body),
+    })
+    const data = await resp.json()
+    return data
+}
+
+const getUserByAssignedTag = async (tag: string) => {
+    const resp = await fetch(`${process.env.API_BACKEND_URL}/users/by-tag/${tag}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'api-key-access': process.env.API_KEY_ACCESS || '',
+        },
+    })
+    const data = await resp.json()
+    return data
+}
+
+const assignSpotToUser = async (userId: string, parkingSpotId: string) => {
+    const resp = await fetch(`${process.env.API_BACKEND_URL}/spot-assignments`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'api-key-access': process.env.API_KEY_ACCESS || '',
+        },
+        body: JSON.stringify(
+            {
+                pks_id: parkingSpotId,
+                usr_id: userId
+            }
+        ),
+    })
+    const data = await resp.json()
+    return data
+}
+
+const unassignSpotFromUser = async (spotAssignmentId: string) => {
+    const resp = await fetch(`${process.env.API_BACKEND_URL}/spot-assignments/${spotAssignmentId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'api-key-access': process.env.API_KEY_ACCESS || '',
+        }
+    })
+    const data = await resp.json()
+    return data
+}
+
+const getActiveSpotAssignment = async (parkingSpotId: string) => {
+    const resp = await fetch(`${process.env.API_BACKEND_URL}/parking-spots/${parkingSpotId}/spot-assignments`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'api-key-access': process.env.API_KEY_ACCESS || '',
+        },
     })
     const data = await resp.json()
     return data
