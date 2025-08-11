@@ -26,7 +26,7 @@ export async function handleChangeStatus(data: any) {
     }
     else {
         spotStatus = await getStatusByTableAndName("parking_spots", "Ocupado")
-
+        isAssign = true
     }
 
     const spotData = {
@@ -105,7 +105,7 @@ const updateReservationStatus = async (reservationId: string, body: any) => {
 }
 
 const getUserByAssignedTag = async (tag: string) => {
-    const resp = await fetch(`${process.env.API_BACKEND_URL}/users/by-tag/${tag}`, {
+    const resp = await fetch(`${process.env.API_BACKEND_URL}/rfid-assignments?rfidTag=${tag}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
