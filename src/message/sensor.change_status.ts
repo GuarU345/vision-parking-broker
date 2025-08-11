@@ -3,7 +3,7 @@ export async function handleChangeStatus(data: any) {
 
     const parkingSpot = await getParkingSpotById(parkingSpotConfig.pks_id)
 
-    const { status: currentStatus } = parkingSpot
+    const { status: currentStatus } = parkingSpot.data
     let spotStatus;
 
     if (currentStatus.stu_name === "Reservado") {
@@ -35,6 +35,7 @@ const getParkingSpotIdByEsp32Id = async (esp32Id: string) => {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
+            'api-key-access': process.env.API_KEY_ACCESS || '',
         },
     })
     const data = await resp.json()
@@ -46,6 +47,7 @@ const getParkingSpotById = async (parkingSpotId: string) => {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
+            'api-key-access': process.env.API_KEY_ACCESS || '',
         },
     })
     const data = await resp.json()
@@ -57,6 +59,7 @@ const updateParkingSpotStatus = async (parkingSpotId: string, body: any) => {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
+            'api-key-access': process.env.API_KEY_ACCESS || '',
         },
         body: JSON.stringify(body),
     })
@@ -69,6 +72,7 @@ const getStatusByTableAndName = async (table: string, statusName: string) => {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
+            'api-key-access': process.env.API_KEY_ACCESS || '',
         },
     })
 
@@ -81,6 +85,7 @@ const updateReservationStatus = async (reservationId: string, body: any) => {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
+            'api-key-access': process.env.API_KEY_ACCESS || '',
         },
         body: JSON.stringify(body),
     })
