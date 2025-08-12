@@ -32,12 +32,12 @@ export async function handleChangeStatus(data: any) {
     const spotData = {
         stu_id: spotStatus.stu_id,
     }
-    await updateParkingSpotStatus(parkingSpot.pks_id, spotData)
+    await updateParkingSpotStatus(parkingSpot.data.pks_id, spotData)
 
     if (isAssign) {
-        await assignSpotToUser(assignedTag.usr_id, parkingSpot.pks_id)
+        await assignSpotToUser(assignedTag.data.usr_id, parkingSpot.data.pks_id)
     } else {
-        await unassignSpotFromUser(spotAssignment.spa_id)
+        await unassignSpotFromUser(spotAssignment.data.spa_id)
     }
 }
 
