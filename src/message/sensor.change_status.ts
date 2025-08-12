@@ -1,3 +1,12 @@
+
+type SpotStatusName = "Disponible" | "Ocupado" | "Reservado"
+
+const STATUS_TRANSITIONS: Record<SpotStatusName, { next: SpotStatusName, assign: boolean }> = {
+    Disponible: { next: "Ocupado", assign: true },
+    Reservado: { next: "Ocupado", assign: false },
+    Ocupado: { next: "Disponible", assign: false },
+}
+
 export async function handleChangeStatus(data: any) {
     const parkingSpotConfig = await getParkingSpotIdByEsp32Id(data.esp32Id)
 
@@ -5,39 +14,26 @@ export async function handleChangeStatus(data: any) {
 
     const assignedTag = await getUserByAssignedTag(data.tagIdentifier)
 
-    const spotAssignment = await getActiveSpotAssignment(parkingSpot.pks_id)
+    const spotAssignment = await getActiveSpotAssignment(parkingSpot.data.pks_id)
 
-    const { status: currentStatus } = parkingSpot.data
-    let spotStatus;
-    let isAssign = false
+    const currentStatusName = parkingSpot.data.status.stu_name as SpotStatusName
 
-    if (currentStatus.stu_name === "Reservado") {
-        spotStatus = await getStatusByTableAndName("parking_spots", "Disponible")
-        const statusReservation = await getStatusByTableAndName("reservations", "Finalizada")
-        const currentReservation = parkingSpot.reservations.find((resv: any) => resv.status.stu_name === "Realizada")
+    const transition = STATUS_TRANSITIONS[currentStatusName];
 
-        const reservationData = {
-            stu_id: statusReservation.stu_id,
-        }
-
-        await updateReservationStatus(currentReservation.rsv_id, reservationData)
-    } else if (currentStatus.stu_name === "Ocupado") {
-        spotStatus = await getStatusByTableAndName("parking_spots", "Disponible")
-    }
-    else {
-        spotStatus = await getStatusByTableAndName("parking_spots", "Ocupado")
-        isAssign = true
+    if (!transition) {
+        throw new Error(`Transición no definida para el estado: ${currentStatusName}`);
     }
 
-    const spotData = {
-        stu_id: spotStatus.stu_id,
-    }
-    await updateParkingSpotStatus(parkingSpot.data.pks_id, spotData)
+    const spotStatus = await getStatusByTableAndName("parking_spots", transition.next);
 
-    if (isAssign) {
-        await assignSpotToUser(assignedTag.data.usr_id, parkingSpot.data.pks_id)
+    await updateParkingSpotStatus(parkingSpot.data.pks_id, {
+        stu_id: spotStatus.stu_id
+    });
+
+    if (transition.assign) {
+        await assignSpotToUser(assignedTag.data.usr_id, parkingSpot.data.pks_id);
     } else {
-        await unassignSpotFromUser(spotAssignment.data.spa_id)
+        await unassignSpotFromUser(spotAssignment.data.spa_id);
     }
 }
 
