@@ -31,20 +31,21 @@ export async function handleChangeStatus(data: any) {
         stu_id: spotStatus.stu_id
     });
 
-    if (transition.next === "Disponible") {
-        const foundReservation = parkingSpot.data.reservations.find((resv: any) => resv.rsv_status.stu_name === "Realizada")
 
-        if (foundReservation) {
-            await updateReservationStatus(foundReservation.rsv_id, {
-                stu_id: reservationStatus.stu_id
-            });
-        }
+    const foundReservation = parkingSpot.data?.reservations?.find((resv: any) => resv.rsv_status.stu_name === "Realizada")
+
+    if (transition.next === "Disponible" && foundReservation) {
+        await updateReservationStatus(foundReservation.rsv_id, {
+            stu_id: reservationStatus.stu_id
+        });
     }
 
     if (transition.assign) {
         await assignSpotToUser(assignedTag.data.usr_id, parkingSpot.data.pks_id);
     } else {
-        await unassignSpotFromUser(spotAssignment.data.spa_id);
+        if (transition.next === "Disponible") {
+            await unassignSpotFromUser(spotAssignment.data.spa_id);
+        }
     }
 }
 
