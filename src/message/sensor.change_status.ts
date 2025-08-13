@@ -25,10 +25,21 @@ export async function handleChangeStatus(data: any) {
     }
 
     const spotStatus = await getStatusByTableAndName("parking_spots", transition.next);
+    const reservationStatus = await getStatusByTableAndName("reservations", "Finalizada");
 
     await updateParkingSpotStatus(parkingSpot.data.pks_id, {
         stu_id: spotStatus.stu_id
     });
+
+    if (transition.next === "Disponible") {
+        const foundReservation = parkingSpot.data.reservations.find((resv: any) => resv.rsv_status.stu_name === "Realizada")
+
+        if (foundReservation) {
+            await updateReservationStatus(foundReservation.rsv_id, {
+                stu_id: reservationStatus.stu_id
+            });
+        }
+    }
 
     if (transition.assign) {
         await assignSpotToUser(assignedTag.data.usr_id, parkingSpot.data.pks_id);
