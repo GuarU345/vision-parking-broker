@@ -32,7 +32,7 @@ export async function handleChangeStatus(data: any) {
     });
 
 
-    const foundReservation = parkingSpot.data?.reservations?.find((resv: any) => resv.rsv_status.stu_name === "Realizada")
+    const foundReservation = parkingSpot.data?.reservations?.find((resv: any) => resv.status.stu_name === "Realizada")
 
     if (transition.next === "Disponible" && foundReservation) {
         await updateReservationStatus(foundReservation.rsv_id, {
