@@ -10,7 +10,7 @@ const STATUS_TRANSITIONS: Record<SpotStatusName, { next: SpotStatusName, assign:
 export async function handleChangeStatus(data: any) {
     const parkingSpotConfig = await getParkingSpotIdByEsp32Id(data.esp32Id)
 
-    const parkingSpot = await getParkingSpotById(parkingSpotConfig.pks_id)
+    const parkingSpot = await getParkingSpotById(parkingSpotConfig.parkingSpot.pks_id)
 
     const assignedTag = await getUserByAssignedTag(data.tagIdentifier)
 
