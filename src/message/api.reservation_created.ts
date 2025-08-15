@@ -6,6 +6,8 @@ interface ReservationCreatedMessage {
     usr_id: string
     pks_id: string
     status: string
+    tagIdentifier: string
+    esp32_id: string
 }
 
 export async function handleApiReservationCreated(data: unknown, client: mqtt.MqttClient) {
@@ -25,6 +27,8 @@ export async function handleApiReservationCreated(data: unknown, client: mqtt.Mq
             type: "reservation_created",
             reservation_id: reservationData.rsv_id,
             parking_spot_id: reservationData.pks_id,
+            tagIdentifier: reservationData.tagIdentifier,
+            esp32_id: reservationData.esp32_id,
             status: reservationData.status,
             timestamp: new Date().toISOString()
         }
